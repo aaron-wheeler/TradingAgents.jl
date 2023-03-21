@@ -1,5 +1,9 @@
 module TradingAgents
 
-# Write your package code here.
+# include -
+include("Include.jl")
 
-end
+# methods that we export -
+export FT_run
+
+end # module

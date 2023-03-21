@@ -3,6 +3,13 @@ uuid = "a932613d-76ea-43ff-97dc-a74afa0c30e6"
 authors = ["aaron-wheeler"]
 version = "1.0.0-DEV"
 
+[deps]
+Brokerage = "c5a525f6-2ca2-4903-bddc-b4106679d02b"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+VLLimitOrderBook = "aaf583bd-e1f6-46ea-b02f-a6ceb51252d5"
+
 [compat]
 julia = "1"
 
