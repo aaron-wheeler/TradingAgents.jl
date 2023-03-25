@@ -19,10 +19,10 @@ Simulate fundamental trading agent activity.
 # References
 - 
 """
-function FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info; tick_size=0.01, rolling_window=100)
+function FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info; tick_size=0.01, lvl=1.03)
 
     # unpack parameters
-    init_cash_range, init_shares_range, prob_wait, trade_freq, num_MM = parameters
+    init_cash_range, init_shares_range, prob_wait, trade_freq, num_ids = parameters
     host_ip_address, port, username, password = server_info
 
     # connect to brokerage
@@ -46,9 +46,12 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
     stock_prices = zeros(Float64, num_assets) # mid-price
     fundamental_values = zeros(Float64, num_assets)
 
-    # check for global variables
-    # price_series = zeros(Float64, rolling_window, num_assets)
-    @assert !isempty(price_series)
+    # initialize price history
+    price_series = Vector{Vector{Float64}}()
+    for i in 1:num_assets
+        series_i = Float64[]
+        push!(price_series, series_i)
+    end
 
     # hold off trading until the market opens
     if Dates.now() < market_open
@@ -67,8 +70,15 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
         trade_queue = collect(Int, agents_to_trade:num_traders)
         shuffle!(trade_queue)
 
+        # retrieve new price history
+        for i in 1:num_assets
+            price_list = Client.getPriceSeries(i)
+            price_series[i] = price_list
+        end
+        # println(price_series)
+
         # for each activated agent, carry out order placement procedure
-        for i in eachindex(trade_queue)
+        for agent in eachindex(trade_queue)
 
             # probabilistically ...
             if rand() <= prob_wait
@@ -77,7 +87,7 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
             end
 
             # get personal details of activated agent
-            id = trade_queue[i] + num_MM
+            id = trade_queue[agent] + num_ids
             assets, cash = get_agent_details!(assets, id)
 
             # activated agent percieves fundamental values
@@ -87,22 +97,24 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
                 bid_prices[i], ask_prices[i] = Client.getBidAsk(i)
                 stock_prices[i] = round(((ask_prices[i] + bid_prices[i]) / 2.0); digits=2) # current mid_price
 
-                # compute agent-specific volatility estimate
-                lookback_period = count(price_series .== 0.0) != (rolling_window * num_assets) ? rand(20:rolling_window) : rolling_window
-                σ = compute_volatility(price_series[:, i], lookback_period)
+                # compute volatility estimate
+                if length(price_series[i]) >= 20
+                    σ = max(0.10, compute_volatility(price_series[i]))
+                else
+                    σ = 0.10
+                end
 
                 # compute agent-specific fundamental value estimates
-                deviation = abs(rand(Normal(0, σ)))
-                fundamental_values[i] = round((stock_prices[i] + deviation), digits=2)
+                deviation = rand(Normal(0, σ))
+                fundamental_values[i] = round(max(0, (stock_prices[i] * (1 + deviation))), digits=2)
             end
 
             # activated agent sells overpriced stocks in their portfolio
             for i in eachindex(assets)
-                if stock_prices[i] > fundamental_values[i]
+                if assets[i] > 0 && stock_prices[i] > (fundamental_values[i] * lvl)
 
                     # determine order details
                     ticker = i
-                    order_id = -1111 # arbitrary (for now)
                     best_ask = ask_prices[ticker]
                     mid_ask_spread = best_ask - stock_prices[i]
                     value_arbitrage = stock_prices[i] - fundamental_values[i]
@@ -110,8 +122,8 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
                     limit_size = assets[i] # sell off entire stake
 
                     # submit order
-                    # println("SELL: trader = $(id), price = $(ask_price), size = $(limit_size), ticker = $(ticker).")
-                    sell_order = Client.placeLimitOrder(ticker,order_id,"SELL_ORDER",ask_price,limit_size,id)
+                    # println("(FT) SELL: trader = $(id), price = $(ask_price), size = $(limit_size), ticker = $(ticker).")
+                    sell_order = Client.placeLimitOrder(ticker,"SELL_ORDER",ask_price,limit_size,id)
                 end
             end
 
@@ -130,20 +142,20 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
                 end
 
                 # execute buy order
+                # the more underpriced, the closer the bid price is to the mid-price
                 if most_profitable_val > 0
 
                     # determine order details
                     ticker = most_profitable_idx
-                    order_id = 1111 # arbitrary (for now)
                     best_bid = bid_prices[ticker]
-                    mid_bid_spread = stock_prices[i] - best_bid
-                    value_arbitrage = fundamental_values[i] - stock_prices[i]
-                    bid_price = round((stock_prices[i] - tick_size - mid_bid_spread/value_arbitrage), digits=2)
+                    mid_bid_spread = stock_prices[ticker] - best_bid
+                    value_arbitrage = fundamental_values[ticker] - stock_prices[ticker]
+                    bid_price = round((stock_prices[ticker] - tick_size - mid_bid_spread/value_arbitrage), digits=2)
                     limit_size = trunc(Int, cash / bid_price) # buy as much as possible
 
                     # submit order
-                    # println("BUY: trader = $(id), price = $(bid_price), size = $(limit_size), ticker = $(ticker).")
-                    buy_order = Client.placeLimitOrder(ticker,order_id,"BUY_ORDER",bid_price,limit_size,id)
+                    # println("(FT) BUY: trader = $(id), price = $(bid_price), size = $(limit_size), ticker = $(ticker).")
+                    buy_order = Client.placeLimitOrder(ticker,"BUY_ORDER",bid_price,limit_size,id)
                 end
             end
             

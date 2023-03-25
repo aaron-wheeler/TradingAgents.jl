@@ -1,6 +1,6 @@
 function init_traders(num_traders, init_cash_range, init_shares_range, num_assets)
     for i in 1:num_traders
-        name = "Trader $(i)"
+        name = "Fundamental Trader $(i)"
         cash = rand(init_cash_range)
         holdings = Dict{Int64, Int64}()
         for ticker in 1:num_assets
@@ -45,11 +45,10 @@ function get_agent_details!(assets, id)
     return assets, cash
 end
 
-function compute_volatility(price_series, lookback_period)
+function compute_volatility(price_series)
     
     # compute the volatility σ -
-    log_returns = diff(log.(price_series[lookback_period:end,1])) # close-to-close returns
-    sum_returns += sum(log_returns)
+    log_returns = diff(log.(price_series[:,1])) # close-to-close returns
     mean_return = sum(log_returns) / length(log_returns)
     return_variance = sum((log_returns .- mean_return).^2) / (length(log_returns) - 1)
     σ_new = sqrt(return_variance) # volatility
