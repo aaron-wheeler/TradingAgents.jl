@@ -1,7 +1,7 @@
 """
     FT_run(num_traders::Int, num_assets::Int, market_open::DateTime,
             market_close::DateTime, parameters::Tuple{...},
-            server_info::Tuple{...}; tick_size::Float64=0.01, rolling_window::Int=100)
+            server_info::Tuple{...}; tick_size::Float64=0.01, lvl::Float64=1.03, print_msg:Bool=false)
 
 Simulate fundamental trading agent activity.
 
@@ -19,7 +19,7 @@ Simulate fundamental trading agent activity.
 # References
 - 
 """
-function FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info; tick_size=0.01, lvl=1.03)
+function FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info; tick_size=0.01, lvl=1.03, print_msg=false)
 
     # unpack parameters
     init_cash_range, init_shares_range, prob_wait, trade_freq, num_ids = parameters
@@ -122,7 +122,7 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
                     limit_size = assets[i] # sell off entire stake
 
                     # submit order
-                    # println("(FT) SELL: trader = $(id), price = $(ask_price), size = $(limit_size), ticker = $(ticker).")
+                    print_msg == true ? println("(FT) SELL: trader = $(id), price = $(ask_price), size = $(limit_size), ticker = $(ticker).") : nothing
                     sell_order = Client.placeLimitOrder(ticker,"SELL_ORDER",ask_price,limit_size,id)
                 end
             end
@@ -154,7 +154,7 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
                     limit_size = trunc(Int, cash / bid_price) # buy as much as possible
 
                     # submit order
-                    # println("(FT) BUY: trader = $(id), price = $(bid_price), size = $(limit_size), ticker = $(ticker).")
+                    print_msg == true ? println("(FT) BUY: trader = $(id), price = $(bid_price), size = $(limit_size), ticker = $(ticker).") : nothing
                     buy_order = Client.placeLimitOrder(ticker,"BUY_ORDER",bid_price,limit_size,id)
                 end
             end
