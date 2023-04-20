@@ -7,8 +7,8 @@ parameters = (
     init_cash_range = 5000.0:0.01:15000.0,
     init_shares_range = 0:1:60,
     prob_wait = 0.5, # probability of halting (per active trader)
-    trade_freq = 5, # how many seconds to wait (if `prob_wait` invoked)
-    num_ids = 30 + 20 # number of reserved ids set aside for other agents
+    trade_freq = 9, # how many seconds to wait (if `prob_wait` invoked)
+    num_ids = 30 + 30 # number of reserved ids set aside for other agents
 )
 
 server_info = (
@@ -18,10 +18,10 @@ server_info = (
     password = "value123"
 )
 
-num_traders, num_assets = 10, 1
+num_traders, num_assets = 30, 1
 market_open = Dates.now() + Dates.Second(8)
-market_close = market_open + Dates.Minute(5)
+market_close = market_open + Dates.Minute(30)
 
-FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info)
+FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info, print_msg=true)
 
 # include("test/example_FT.jl")

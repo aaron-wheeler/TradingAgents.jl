@@ -111,7 +111,8 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
 
             # activated agent sells overpriced stocks in their portfolio
             for i in eachindex(assets)
-                if assets[i] > 0 && stock_prices[i] > (fundamental_values[i] * lvl)
+                # if assets[i] > 0 && stock_prices[i] > (fundamental_values[i] * lvl)
+                if assets[i] > 0 && stock_prices[i] > fundamental_values[i]
 
                     # determine order details
                     ticker = i
