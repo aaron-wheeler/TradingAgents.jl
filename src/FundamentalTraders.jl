@@ -32,7 +32,7 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
     user = Client.loginUser(username, password)
  
     # initialize traders
-    init_traders(num_traders, init_cash_range, init_shares_range, num_assets)
+    init_traders(num_traders, "Fundamental Trader", init_cash_range, init_shares_range, num_assets)
     
     # instantiate Pareto distribution for trader activation
     granularity = (8.0 - 1.0)/num_traders
