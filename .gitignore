@@ -1,5 +1,3 @@
 /Manifest.toml
 /docs/build/
 src/DataUtils.jl
-src/ContrarianTraders.jl
-src/MomentumTraders.jl
