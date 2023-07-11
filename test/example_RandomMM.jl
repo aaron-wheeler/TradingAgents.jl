@@ -23,9 +23,7 @@ server_info = (
 )
 
 ticker = 1
-market_open = Dates.now() + Dates.Second(30) # DateTime(2022,7,19,13,19,41,036)
-market_close = market_open + Dates.Minute(5)
 
-RandomMM_run(ticker, market_open, market_close, parameters, init_conditions, server_info, collect_data = true)
+RandomMM_run(ticker, parameters, init_conditions, server_info, collect_data = true)
 
 # include("test/example_RandomMM.jl")

@@ -4,6 +4,7 @@ _PATH_TO_SRC = dirname(pathof(@__MODULE__))
 # load external packages that we depend upon -
 using Brokerage
 using Distributions
+using Distributed
 using Dates
 using Random
 using CSV
@@ -18,5 +19,6 @@ import Ipopt
 include(joinpath(_PATH_TO_SRC, "TraderUtils.jl"))
 include(joinpath(_PATH_TO_SRC, "FundamentalTraders.jl"))
 include(joinpath(_PATH_TO_SRC, "ZeroTrader.jl"))
+include(joinpath(_PATH_TO_SRC, "ParallelSmallTrader.jl"))
 include(joinpath(_PATH_TO_SRC, "RandomMarketMaker.jl"))
 include(joinpath(_PATH_TO_SRC, "AdaptiveMarketMaker.jl"))

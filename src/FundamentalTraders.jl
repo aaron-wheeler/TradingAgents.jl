@@ -1,7 +1,7 @@
 """
-    FT_run(num_traders::Int, num_assets::Int, market_open::DateTime,
-            market_close::DateTime, parameters::Tuple{...},
-            server_info::Tuple{...}; tick_size::Float64=0.01, lvl::Float64=1.03, print_msg:Bool=false)
+    FT_run(num_traders::Int, num_assets::Int, parameters::Tuple{...},
+            server_info::Tuple{...}; tick_size::Float64=0.01,
+            lvl::Float64=1.03, print_msg:Bool=false)
 
 Simulate fundamental trading agent activity.
 
@@ -19,7 +19,7 @@ Simulate fundamental trading agent activity.
 # References
 - 
 """
-function FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info; tick_size=0.01, lvl=1.03, print_msg=false)
+function FT_run(num_traders, num_assets, parameters, server_info; tick_size=0.01, lvl=1.03, print_msg=false)
 
     # unpack parameters
     init_cash_range, init_shares_range, prob_wait, trade_freq, num_ids = parameters
@@ -31,6 +31,9 @@ function FT_run(num_traders, num_assets, market_open, market_close, parameters, 
     Client.createUser(username, password)
     user = Client.loginUser(username, password)
  
+    # retrieve market open/close times
+    market_open, market_close = Client.getMarketSchedule()
+
     # initialize traders
     init_traders(num_traders, "Fundamental Trader", init_cash_range, init_shares_range, num_assets)
     

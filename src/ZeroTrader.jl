@@ -1,12 +1,11 @@
 """
-    ZT_run(num_traders::Int, num_assets::Int, market_open::DateTime,
-            market_close::DateTime, parameters::Tuple{...},
+    ZT_run(num_traders::Int, num_assets::Int, parameters::Tuple{...},
             server_info::Tuple{...}; print_msg:Bool=false)
 
 Simulate zero-intelligence trading agent activity.
 
 # Arguments
-- `num_traders::Int`: the number of fundamental traders to simulate
+- `num_traders::Int`: the number of traders to simulate
 - `num_assets::Int`: the number of available assets for the agents to trade
 - ...
 
@@ -19,7 +18,7 @@ Simulate zero-intelligence trading agent activity.
 # References
 - 
 """
-function ZT_run(num_traders, num_assets, market_open, market_close, parameters, server_info; print_msg=false)
+function ZT_run(num_traders, num_assets, parameters, server_info; print_msg=false)
     # unpack parameters
     username, password, init_cash_range, init_shares_range, prob_wait, trade_freq, num_MM = parameters
     host_ip_address, port = server_info
@@ -29,6 +28,9 @@ function ZT_run(num_traders, num_assets, market_open, market_close, parameters, 
     Client.SERVER[] = url
     Client.createUser(username, password)
     user = Client.loginUser(username, password)
+
+    # retrieve market open/close times
+    market_open, market_close = Client.getMarketSchedule()
  
     # initialize traders
     init_traders(num_traders, "ZeroTrader", init_cash_range, init_shares_range, num_assets)

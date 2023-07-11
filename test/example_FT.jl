@@ -19,9 +19,7 @@ server_info = (
 )
 
 num_traders, num_assets = 70, 1
-market_open = Dates.now() + Dates.Second(8)
-market_close = market_open + Dates.Minute(60)
 
-FT_run(num_traders, num_assets, market_open, market_close, parameters, server_info, print_msg=true)
+FT_run(num_traders, num_assets, parameters, server_info, print_msg=true)
 
 # include("test/example_FT.jl")

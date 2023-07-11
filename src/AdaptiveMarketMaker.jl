@@ -87,7 +87,7 @@ Simulate adaptive market-making agent activity.
 # References
 - 
 """
-function AdaptiveMM_run(ticker, market_open, market_close, parameters, init_conditions, server_info; collect_data = false)
+function AdaptiveMM_run(ticker, parameters, init_conditions, server_info; collect_data = false)
     # unpack parameters
     η_ms,γ,δ_tol,inventory_limit,unit_trade_size,trade_freq = parameters
     init_cash, init_z, num_init_quotes, num_init_rounds = init_conditions
@@ -99,6 +99,9 @@ function AdaptiveMM_run(ticker, market_open, market_close, parameters, init_cond
     Client.SERVER[] = url
     Client.createUser(username, password)
     user = Client.loginUser(username, password)
+
+    # retrieve market open/close times
+    market_open, market_close = Client.getMarketSchedule()
 
     # preallocate data structures and variables
     ν_ϵ_losses = Float64[]

@@ -17,9 +17,7 @@ server_info = (
 )
 
 num_traders, num_assets = 10, 1
-market_open = Dates.now() + Dates.Second(5) # DateTime(2022,7,19,13,19,41,036)
-market_close = market_open + Dates.Second(20)
 
-ZT_run(num_traders, num_assets, market_open, market_close, parameters, server_info, print_msg=true)
+ZT_run(num_traders, num_assets, parameters, server_info, print_msg=true)
 
 # include("test/example_ZT.jl")

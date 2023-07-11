@@ -15,7 +15,7 @@ Simulate random market-making agent activity.
 # References
 - 
 """
-function RandomMM_run(ticker, market_open, market_close, parameters, init_conditions, server_info; collect_data = false)
+function RandomMM_run(ticker, parameters, init_conditions, server_info; collect_data = false)
     # unpack parameters
     id,ϵ_min,ϵ_max,inventory_limit,unit_trade_size,trade_freq = parameters
     cash, z = init_conditions # dynamic variables
@@ -26,6 +26,9 @@ function RandomMM_run(ticker, market_open, market_close, parameters, init_condit
     Client.SERVER[] = url
     Client.createUser(username, password)
     user = Client.loginUser(username, password)
+
+    # retrieve market open/close times
+    market_open, market_close = Client.getMarketSchedule()
 
     # preallocate data structures and variables
     cash_data = Float64[]
