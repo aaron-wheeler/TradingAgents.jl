@@ -7,6 +7,7 @@ include("Include.jl")
 export FT_run
 export ZT_run
 export PST_run
+export PLP_run
 export RandomMM_run
 export AdaptiveMM_run
 
