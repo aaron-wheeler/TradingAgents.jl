@@ -25,8 +25,7 @@ parameters = (
 )
 
 server_info = (
-    # host_ip_address = "0.0.0.0",
-    host_ip_address = "128.253.116.77",
+    host_ip_address = "0.0.0.0",
     port = "8080",
     username = "Liquidity Provider",
     password = "provide123"
