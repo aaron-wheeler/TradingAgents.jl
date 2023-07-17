@@ -3,9 +3,9 @@ using TradingAgents, Dates
 ## Example use case
 parameters = (
     ϵ_min = -0.5, # lower bound for price deviation variable
-    ϵ_max = 0.5, # upper bound for price deviation variable
+    ϵ_max = 1.0, # upper bound for price deviation variable
     inventory_limit = 3000, # maximum and minimum number of share holdings allowed
-    unit_trade_size = 15, # amount of shares behind each quote
+    unit_trade_size = 100, # amount of shares behind each quote
     trade_freq = 10 # 20 # avg seconds between trades; based on Paddrik et al. (2012) and Paulin et al. (2019)
 )
 

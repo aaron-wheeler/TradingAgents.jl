@@ -138,13 +138,10 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_all_da
                             cash[id] -= order_size*ask_price
                             cash[id] = round(cash[id], digits=2)
                         end
-                    end
-                end
 
-                #----- Update Step -----#
-                @sync for ticker in 1:num_assets
-                    @async begin
-                        # wait 'trade_freq' seconds and reset data structures
+                        #----- Update Step -----#
+                        # wait 1 second and reset data structures
+                        sleep(1)
                         ν_new_bid = [unit_trade_size]
                         ν_new_ask = [unit_trade_size]
         
@@ -182,7 +179,49 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_all_da
                     end
                 end
 
-                sleep(1) # wait 1 second
+                # #----- Update Step -----#
+                # @sync for ticker in 1:num_assets
+                #     @async begin
+                #         # wait 1 second and reset data structures
+                #         sleep(1)
+                #         ν_new_bid = [unit_trade_size]
+                #         ν_new_ask = [unit_trade_size]
+        
+                #         # retrieve data for (potentially) unfilled buy order
+                #         active_buy_orders = Client.getActiveBuyOrders(id, ticker)
+                #         for i in eachindex(active_buy_orders)
+                #             # retrieve order
+                #             unfilled_buy = (active_buy_orders[i])[2]
+                #             # cancel unfilled order
+                #             cancel_order = Client.cancelQuote(ticker,unfilled_buy.orderid,"BUY_ORDER",unfilled_buy.price,id)
+                #             # store data
+                #             ν_new_bid[1] = unit_trade_size - unfilled_buy.size
+                #         end
+        
+                #         # retrieve data for (potentially) unfilled sell order
+                #         active_sell_orders = Client.getActiveSellOrders(id, ticker)
+                #         for i in eachindex(active_sell_orders)
+                #             # retrieve order
+                #             unfilled_sell = (active_sell_orders[i])[2]
+                #             # cancel unfilled order
+                #             cancel_order = Client.cancelQuote(ticker,unfilled_sell.orderid,"SELL_ORDER",unfilled_sell.price,id)
+                #             # store data
+                #             ν_new_ask[1] = unit_trade_size - unfilled_sell.size
+                #         end
+        
+                #         # adjust cash and inventory
+                #         cash[id], z[id, ticker] = update_init_cash_inventory(cash[id], z[id, ticker], P_t, S_ref_0, ν_new_bid,
+                #                                         new_bid[3], ν_new_ask, new_ask[3])
+        
+                #         # # compute and store cash and inventory data
+                #         # if collect_all_data == true
+                #         #     push!(cash_data, cash[id])
+                #         #     push!(inventory_data, z[id, ticker])
+                #         # end
+                #     end
+                # end
+
+                # sleep(1) # wait 1 second
             end
         end
 
