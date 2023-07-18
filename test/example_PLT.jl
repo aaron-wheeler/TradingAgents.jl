@@ -1,5 +1,5 @@
 """
-Configuration file for running a single test of the PST algorithm.
+Configuration file for running a single test of the PLT algorithm.
 """
 
 using Distributed
@@ -18,7 +18,7 @@ end
 
 # Example use case
 parameters = (
-    username = "aaron",
+    username = "Liquidity Taker",
     password = "password123",
     init_cash_range = 10000.0:0.01:30000.0,
     init_shares_range = 0:1:120,
@@ -33,6 +33,6 @@ server_info = (
 
 num_traders, num_assets = 10, 1 # 6500, 1 # based on Paddrik et al. (2012) and Paulin et al. (2019)
 
-PST_run(num_traders, num_assets, parameters, server_info, print_msg=true)
+PLT_run(num_traders, num_assets, parameters, server_info, print_msg=true)
 
-# include("test/example_ST.jl")
+# include("test/example_PLT.jl")

@@ -19,12 +19,12 @@ Simulate zero-intelligence liquidity providers in parallel.
 # References
 - 
 """
-function PLP_run(num_traders, num_assets, parameters, server_info; tick_size=0.01, lvl=1.03, print_msg=false)
+function PLP_run(num_traders, num_assets, parameters, server_info; print_msg=false)
 
     # unpack parameters
     init_cash_range, init_shares_range, trade_freq, num_ids = parameters
     host_ip_address, port, username, password = server_info
-    println("Number of workers = ", nprocs()) # should be multiple
+    print_msg == true ? println("Number of workers = ", nprocs()) : nothing
 
     # connect to brokerage
     url = "http://$(host_ip_address):$(port)"
@@ -38,12 +38,13 @@ function PLP_run(num_traders, num_assets, parameters, server_info; tick_size=0.0
     # initialize traders
     init_traders(num_traders, "Liquidity Provider", init_cash_range, init_shares_range, num_assets)
 
-    # preallocate data structures 
-    assets = zeros(Int64, num_assets) # ticker-indexed vector of each asset share count
-    bid_prices = zeros(Float64, num_assets)
-    ask_prices = zeros(Float64, num_assets)
-    stock_prices = zeros(Float64, num_assets) # mid-price
-    fundamental_values = zeros(Float64, num_assets)
+    # preallocate trading data structures 
+    assets = zeros(Int64, num_assets)
+    bid_price = zeros(Float64, num_assets)
+    ask_price = zeros(Float64, num_assets)
+    stock_price = zeros(Float64, num_assets)
+    price_draw = zeros(Float64, num_assets)
+    eligible_bid = zeros(Int, num_assets)
 
     # initialize price history
     price_series = Vector{Vector{Float64}}()
@@ -63,14 +64,16 @@ function PLP_run(num_traders, num_assets, parameters, server_info; tick_size=0.0
     @info "(LiquidityProvider) Initiating trade sequence now."
     while Dates.now() < market_close
 
+        # update observable market variables
         for i in 1:num_assets
+
             # retrieve new price history
             price_list = Client.getPriceSeries(i)
             price_series[i] = price_list
 
             # query prices
-            bid_prices[i], ask_prices[i] = Client.getBidAsk(i)
-            stock_prices[i] = round(((ask_prices[i] + bid_prices[i]) / 2.0); digits=2) # current mid_price
+            bid_price[i], ask_price[i] = Client.getBidAsk(i)
+            stock_price[i] = round(((ask_price[i] + bid_price[i]) / 2.0); digits=2) # current mid-price
         end
 
         # for each activated agent, carry out order placement procedure
@@ -82,74 +85,64 @@ function PLP_run(num_traders, num_assets, parameters, server_info; tick_size=0.0
                 # get personal details of activated agent
                 id = agent + num_ids
                 assets, cash = get_agent_details!(assets, id)
-                println("Worker $(myid()). LiquidityProvider $(id) activated.")
+                print_msg == true ? println("Worker $(myid()). LiquidityProvider $(id) activated.") : nothing
 
-                # activated agent percieves fundamental values
+                # activated agent computes limit price for each asset
                 for i in eachindex(assets)
-
-                    # test
-                    println("bid_prices[$(i)] = $(bid_prices[i])")
 
                     # compute volatility estimate
                     if length(price_series[i]) >= 20
                         σ = max(0.10, compute_volatility(price_series[i]))
                     else
-                        σ = 0.10
+                        σ = 0.10 # default volatility value
                     end
 
-                    # compute agent-specific fundamental value estimates
-                    deviation = rand(Normal(0, σ)) # make Uniform?
-                    fundamental_values[i] = round(max(0, (stock_prices[i] * (1 + deviation))), digits=2)
+                    # draw limit price from probability distribution
+                    deviation = rand(Normal(0, σ)) # make this uniform distribution?
+                    price_draw[i] = round(max(0, (stock_price[i] * (1 + deviation))), digits=2)
                 end
 
-                # activated agent sells overpriced stocks in their portfolio
-                for i in eachindex(assets)
-                    # if assets[i] > 0 && stock_prices[i] > (fundamental_values[i] * lvl)
-                    if assets[i] > 0 && stock_prices[i] > fundamental_values[i]
+                # activated agent sells off assets from their portfolio
+                for ticker in eachindex(assets)
+                    if assets[ticker] > 0 && stock_price[ticker] < price_draw[ticker]
 
                         # determine order details
-                        ticker = i
-                        best_ask = ask_prices[ticker]
-                        mid_ask_spread = best_ask - stock_prices[i]
-                        value_arbitrage = stock_prices[i] - fundamental_values[i]
-                        ask_price = round((stock_prices[i] + tick_size + mid_ask_spread/value_arbitrage), digits=2)
-                        limit_size = assets[i] # sell off entire stake
+                        limit_price = max(ask_price[ticker], price_draw[ticker])
+                        limit_size = assets[ticker] # sell off entire stake; make this partial stake?
 
                         # submit order
-                        print_msg == true ? println("(LP) SELL: trader = $(id), price = $(ask_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
-                        # sell_order = Client.placeLimitOrder(ticker,"SELL_ORDER",ask_price,limit_size,id)
+                        print_msg == true ? println("(PLP) SELL: trader = $(id), price = $(limit_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
+                        Client.placeLimitOrder(ticker,"SELL_ORDER",limit_price,limit_size,id)
                     end
                 end
 
-                # activated agent buys underpriced stocks with excess cash
-                if any(cash .> stock_prices)
+                # activated agent buys assets with excess cash
+                if any(cash .> stock_price)
 
-                    # determine which asset to buy
-                    most_profitable_val = 0
-                    most_profitable_idx = 0
-                    for i in eachindex(stock_prices)
-                        if cash > stock_prices[i]
-                            value_arbitrage = fundamental_values[i] - stock_prices[i]
-                            most_profitable_idx = value_arbitrage > most_profitable_val ? i : most_profitable_idx
-                            most_profitable_val = value_arbitrage > most_profitable_val ? value_arbitrage : most_profitable_val
+                    # determine which assets are eligible for purchase
+                    for i in eachindex(stock_price)
+                        eligible_bid[i] = cash > price_draw[i] && price_draw[i] < stock_price[i] ? 1 : 0
+                    end
+
+                    # determine how to distribute cash across eligible assets
+                    num_eligible_buys = sum(eligible_bid)
+                    cash_weights = num_eligible_buys > 0 ? rand(Dirichlet(num_eligible_buys, 1.0)) : [0.0]
+                    
+                    # submit orders for each eligible asset
+                    cash_idx = 1
+                    for ticker in eachindex(stock_price)
+                        if eligible_bid[ticker] == 1
+
+                            # determine order details
+                            limit_price = min(bid_price[ticker], price_draw[ticker])
+                            limit_size = floor(Int, cash_weights[cash_idx] * (cash / limit_price))
+                            cash_idx += 1
+                            limit_size > 0 ? nothing : continue # skip if no cash to buy
+
+                            # submit order
+                            print_msg == true ? println("(PLP) BUY: trader = $(id), price = $(limit_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
+                            Client.placeLimitOrder(i,"BUY_ORDER",limit_price,limit_size,id)
                         end
-                    end
-
-                    # execute buy order
-                    # the more underpriced, the closer the bid price is to the mid-price
-                    if most_profitable_val > 0
-
-                        # determine order details
-                        ticker = most_profitable_idx
-                        best_bid = bid_prices[ticker]
-                        mid_bid_spread = stock_prices[ticker] - best_bid
-                        value_arbitrage = fundamental_values[ticker] - stock_prices[ticker]
-                        bid_price = round((stock_prices[ticker] - tick_size - mid_bid_spread/value_arbitrage), digits=2)
-                        limit_size = trunc(Int, cash / bid_price) # buy as much as possible
-
-                        # submit order
-                        print_msg == true ? println("(LP) BUY: trader = $(id), price = $(bid_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
-                        # buy_order = Client.placeLimitOrder(ticker,"BUY_ORDER",bid_price,limit_size,id)
                     end
                 end
             end

@@ -19,7 +19,7 @@ import Ipopt
 include(joinpath(_PATH_TO_SRC, "TraderUtils.jl"))
 include(joinpath(_PATH_TO_SRC, "FundamentalTraders.jl"))
 include(joinpath(_PATH_TO_SRC, "ZeroTrader.jl"))
-include(joinpath(_PATH_TO_SRC, "ParallelSmallTrader.jl"))
+include(joinpath(_PATH_TO_SRC, "ParallelLiquidityTaker.jl"))
 include(joinpath(_PATH_TO_SRC, "ParallelLiquidityProvider.jl"))
 include(joinpath(_PATH_TO_SRC, "RandomMarketMaker.jl"))
 include(joinpath(_PATH_TO_SRC, "ParallelMarketMaker.jl"))
