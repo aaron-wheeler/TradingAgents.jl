@@ -18,6 +18,6 @@ server_info = (
 
 num_agents, num_assets = 10, 1 # 320, 1 # based on Paddrik et al. (2012) and Paulin et al. (2019)
 
-PMM_run(num_agents, num_assets, parameters, server_info, print_msg = true)
+PMM_run(num_agents, num_assets, parameters, server_info, collect_data = true, print_msg = true)
 
 # include("test/example_PMM.jl")
