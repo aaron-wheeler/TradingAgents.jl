@@ -108,11 +108,11 @@ function PLP_run(num_traders, num_assets, parameters, server_info; print_msg=fal
 
                         # determine order details
                         limit_price = max(ask_price[ticker], price_draw[ticker])
-                        limit_size = assets[ticker] # sell off entire stake; make this partial stake?
+                        limit_size = round(Int, rand(Uniform())*assets[ticker]) # sell off partial stake
 
                         # submit order
-                        print_msg == true ? println("(PLP) SELL: trader = $(id), price = $(limit_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
-                        Client.placeLimitOrder(ticker,"SELL_ORDER",limit_price,limit_size,id)
+                        print_msg == true && limit_size > 0 ? println("(PLP) SELL: trader = $(id), price = $(limit_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
+                        limit_size > 0 ? Client.placeLimitOrder(ticker,"SELL_ORDER",limit_price,limit_size,id) : nothing
                     end
                 end
 
@@ -141,7 +141,7 @@ function PLP_run(num_traders, num_assets, parameters, server_info; print_msg=fal
 
                             # submit order
                             print_msg == true ? println("(PLP) BUY: trader = $(id), price = $(limit_price), size = $(limit_size), ticker = $(ticker), worker $(myid()).") : nothing
-                            Client.placeLimitOrder(i,"BUY_ORDER",limit_price,limit_size,id)
+                            Client.placeLimitOrder(ticker,"BUY_ORDER",limit_price,limit_size,id)
                         end
                     end
                 end

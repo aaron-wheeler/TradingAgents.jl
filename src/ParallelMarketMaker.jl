@@ -18,7 +18,7 @@ Simulate random market-making agent activity in "parallel" (asynchronous tasks).
 function PMM_run(num_agents, num_assets, parameters, server_info; collect_data = false, print_msg=false)
 
     # unpack parameters
-    ϵ_min,ϵ_max,inventory_limit,unit_trade_size,trade_freq = parameters
+    ϵ_min,ϵ_max,unit_trade_size,trade_freq = parameters
     host_ip_address, port, username, password = server_info
 
     # connect to brokerage
@@ -37,6 +37,7 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
     # preallocate trading data structures
     new_bid = [0.0 0.0 0.0]
     new_ask = [0.0 0.0 0.0]
+    place_order = [false]
 
     # hold off trading until the market opens
     if Dates.now() < market_open
@@ -88,15 +89,16 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
                         P_bid = P_t - round(S_ref_0*(1 + ϵ_buy), digits=2); P_ask = P_t + round(S_ref_0*(1 + ϵ_sell), digits=2)
                         P_bid = round(P_bid, digits=2)
                         P_ask = round(P_ask, digits=2)
-                        P_bid == P_ask ? place_order = false : place_order = true # avoid error
+                        P_bid == P_ask ? place_order[1] = false : place_order[1] = true # avoid error
+                        S_ref_0 <= 0.02 ? place_order[1] = false : place_order[1] = true # avoid risk of crossing book
                         
                         # post quote on ask side
-                        print_msg == true && place_order == true ? println("(PMM $(id)) SELL: price = $(P_ask), size = $(unit_trade_size), ticker = $(ticker).") : nothing
-                        place_order == true ? order = Client.provideLiquidity(ticker,"SELL_ORDER",P_ask,unit_trade_size,id) : nothing
+                        print_msg == true && place_order[1] == true ? println("(PMM $(id)) SELL: price = $(P_ask), size = $(unit_trade_size), ticker = $(ticker).") : nothing
+                        place_order[1] == true ? order = Client.provideLiquidity(ticker,"SELL_ORDER",P_ask,unit_trade_size,id) : nothing
                         
                         # post quote on bid side
-                        print_msg == true && place_order == true ? println("(PMM $(id)) BUY: price = $(P_bid), size = $(unit_trade_size), ticker = $(ticker).") : nothing
-                        place_order == true ? order = Client.provideLiquidity(ticker,"BUY_ORDER",P_bid,unit_trade_size,id) : nothing
+                        print_msg == true && place_order[1] == true ? println("(PMM $(id)) BUY: price = $(P_bid), size = $(unit_trade_size), ticker = $(ticker).") : nothing
+                        place_order[1] == true ? order = Client.provideLiquidity(ticker,"BUY_ORDER",P_bid,unit_trade_size,id) : nothing
         
                         #----- Hedging Policy -----#
                         # Determine the fraction of current inventory to hedge (by initiating offsetting trade)
@@ -145,8 +147,8 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
                         #----- Update Step -----#
                         # pause and reset data structures
                         sleep(1)
-                        ν_new_bid = [unit_trade_size]
-                        ν_new_ask = [unit_trade_size]
+                        ν_new_bid = place_order[1] == true ? [unit_trade_size] : [0.0]
+                        ν_new_ask = place_order[1] == true ? [unit_trade_size] : [0.0]
         
                         # retrieve data for (potentially) unfilled buy order
                         active_buy_orders = Client.getActiveBuyOrders(id, ticker)
