@@ -149,6 +149,20 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
                         sleep(1)
                         ν_new_bid = place_order[1] == true ? [unit_trade_size] : [0.0]
                         ν_new_ask = place_order[1] == true ? [unit_trade_size] : [0.0]
+
+                        # retrieve data for (potentially) unfilled sell order
+                        active_sell_orders = Client.getActiveSellOrders(id, ticker)
+                        for i in eachindex(active_sell_orders)
+
+                            # retrieve order
+                            unfilled_sell = (active_sell_orders[i])[2]
+
+                            # cancel unfilled order
+                            cancel_order = Client.cancelQuote(ticker,unfilled_sell.orderid,"SELL_ORDER",unfilled_sell.price,id)
+                            
+                            # store data
+                            ν_new_ask[1] = unit_trade_size - unfilled_sell.size
+                        end
         
                         # retrieve data for (potentially) unfilled buy order
                         active_buy_orders = Client.getActiveBuyOrders(id, ticker)
@@ -162,20 +176,6 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
                             
                             # store data
                             ν_new_bid[1] = unit_trade_size - unfilled_buy.size
-                        end
-        
-                        # retrieve data for (potentially) unfilled sell order
-                        active_sell_orders = Client.getActiveSellOrders(id, ticker)
-                        for i in eachindex(active_sell_orders)
-
-                            # retrieve order
-                            unfilled_sell = (active_sell_orders[i])[2]
-
-                            # cancel unfilled order
-                            cancel_order = Client.cancelQuote(ticker,unfilled_sell.orderid,"SELL_ORDER",unfilled_sell.price,id)
-                            
-                            # store data
-                            ν_new_ask[1] = unit_trade_size - unfilled_sell.size
                         end
         
                         # adjust cash and inventory

@@ -1,12 +1,17 @@
+"""
+Example script for running the PMM algorithm.
+"""
+
 using TradingAgents, Dates
 
-## Example use case
+# Example configuration
+num_agents, num_assets = 320, 5
+
 parameters = (
     ϵ_min = -0.5, # lower bound for price deviation variable
     ϵ_max = 1.0, # upper bound for price deviation variable
-    inventory_limit = 3000, # maximum and minimum number of share holdings allowed
     unit_trade_size = 100, # amount of shares behind each quote
-    trade_freq = 10 # 20 # avg seconds between trades; based on Paddrik et al. (2012) and Paulin et al. (2019)
+    trade_freq = 2 # avg seconds between trades 
 )
 
 server_info = (
@@ -15,8 +20,6 @@ server_info = (
     username = "Parallel Market Maker",
     password = "liquidity000"
 )
-
-num_agents, num_assets = 10, 1 # 320, 1 # based on Paddrik et al. (2012) and Paulin et al. (2019)
 
 PMM_run(num_agents, num_assets, parameters, server_info, collect_data = true, print_msg = true)
 

@@ -1,5 +1,5 @@
 """
-Configuration file for running a single test of the PLP algorithm.
+Example script for running the PLP algorithm.
 """
 
 using Distributed
@@ -16,12 +16,14 @@ end
     using TradingAgents, Dates, Brokerage, Distributions
 end
 
-# Example use case
+# Example configuration
+num_traders, num_assets = 5850, 5
+
 parameters = (
-    init_cash_range = 10000.0:0.01:30000.0,
-    init_shares_range = 0:1:120,
-    trade_freq = 13, # 7200, # avg seconds between trades; based on Paddrik et al. (2012) and Paulin et al. (2019)
-    num_ids = 30 # + 70 # number of reserved ids set aside for other agents
+    init_cash_range = (5000.0 * num_assets):0.01:(15000.0 * num_assets),
+    init_shares_range = 50:1:150,
+    trade_freq = 720, # avg seconds between trades
+    num_ids = 320 + 650 # number of reserved ids set aside for other agents (e.g., liquidity takers and market makers)
 )
 
 server_info = (
@@ -30,8 +32,6 @@ server_info = (
     username = "Liquidity Provider",
     password = "provide123"
 )
-
-num_traders, num_assets = 10, 1 # 6500, 1 # based on Paddrik et al. (2012) and Paulin et al. (2019)
 
 PLP_run(num_traders, num_assets, parameters, server_info, print_msg=true)
 
