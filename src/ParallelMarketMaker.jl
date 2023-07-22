@@ -35,9 +35,9 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
     z = zeros(Int, num_agents, num_assets)
 
     # preallocate trading data structures
-    new_bid = [0.0 0.0 0.0]
-    new_ask = [0.0 0.0 0.0]
-    place_order = [false]
+    new_bid = zeros(num_assets, 3)
+    new_ask = zeros(num_assets, 3)
+    place_order = zeros(Int, num_agents, num_assets) # set to 1 if order is placed, 0 otherwise
 
     # hold off trading until the market opens
     if Dates.now() < market_open
@@ -56,50 +56,65 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
 
                 #----- Order Step -----#
                 @sync for ticker in 1:num_assets
-                    @async begin
+                    # @async begin
 
-                        # retrieve current market conditions (current mid-price and side-spread)
-                        P_t, S_ref_0 = get_price_details(ticker)
-                        new_bid[1] = P_t
-                        new_ask[1] = P_t
-                        new_bid[2] = S_ref_0
-                        new_ask[2] = S_ref_0
-        
-                        # check variables
-                        if print_msg == true
-                            println("========================")
-                            println("")
-                            println("P_t = ", P_t)
-                            println("S_ref_0 = ", S_ref_0)
-                            println("z = ", z[id, ticker])
-                            println("cash = ", cash[id])
-                        end
-        
-                        #----- Pricing Policy -----#
-                        # determine how far from S_ref_0 to place quote
-        
-                        # Set buy and sell ϵ values
-                        ϵ_buy = round(rand(Uniform(ϵ_min, ϵ_max)), digits = 2)
-                        ϵ_sell = round(rand(Uniform(ϵ_min, ϵ_max)), digits = 2)
-                        new_bid[3] = ϵ_buy
-                        new_ask[3] = ϵ_sell
-        
-                        # set the limit order prices
-                        print_msg == true ? println("(PMM $(id)) ϵ_buy = $(ϵ_buy), ϵ_sell = $(ϵ_sell), ticker = $(ticker)") : nothing
-                        P_bid = P_t - round(S_ref_0*(1 + ϵ_buy), digits=2); P_ask = P_t + round(S_ref_0*(1 + ϵ_sell), digits=2)
-                        P_bid = round(P_bid, digits=2)
-                        P_ask = round(P_ask, digits=2)
-                        P_bid == P_ask ? place_order[1] = false : place_order[1] = true # avoid error
-                        S_ref_0 <= 0.02 ? place_order[1] = false : place_order[1] = true # avoid risk of crossing book
-                        
-                        # post quote on ask side
-                        print_msg == true && place_order[1] == true ? println("(PMM $(id)) SELL: price = $(P_ask), size = $(unit_trade_size), ticker = $(ticker).") : nothing
-                        place_order[1] == true ? order = Client.provideLiquidity(ticker,"SELL_ORDER",P_ask,unit_trade_size,id) : nothing
-                        
+                    # retrieve current market conditions (current mid-price and side-spread)
+                    P_t, S_ref_0 = get_price_details(ticker)
+                    new_bid[ticker, 1] = P_t
+                    new_ask[ticker, 1] = P_t
+                    new_bid[ticker, 2] = S_ref_0
+                    new_ask[ticker, 2] = S_ref_0
+    
+                    # check variables
+                    if print_msg == true
+                        println("========================")
+                        println("")
+                        println("P_t = ", P_t)
+                        println("S_ref_0 = ", S_ref_0)
+                        println("z = ", z[id, ticker])
+                        println("cash = ", cash[id])
+                    end
+    
+                    #----- Pricing Policy -----#
+                    # determine how far from S_ref_0 to place quote
+    
+                    # Set buy and sell ϵ values
+                    ϵ_buy = round(rand(Uniform(ϵ_min, ϵ_max)), digits = 2)
+                    ϵ_sell = round(rand(Uniform(ϵ_min, ϵ_max)), digits = 2)
+                    new_bid[ticker, 3] = ϵ_buy
+                    new_ask[ticker, 3] = ϵ_sell
+    
+                    # set the limit order prices
+                    print_msg == true ? println("(PMM $(id)) ϵ_buy = $(ϵ_buy), ϵ_sell = $(ϵ_sell), ticker = $(ticker)") : nothing
+                    P_bid = P_t - round(S_ref_0*(1 + ϵ_buy), digits=2); P_ask = P_t + round(S_ref_0*(1 + ϵ_sell), digits=2)
+                    P_bid = round(P_bid, digits=2)
+                    P_ask = round(P_ask, digits=2)
+                    P_bid == P_ask ? place_order[id, ticker] = false : place_order[id, ticker] = true # avoid error
+                    S_ref_0 <= 0.02 ? place_order[id, ticker] = false : place_order[id, ticker] = true # avoid risk of crossing book
+                    
+                    # determine side of first order
+                    bid_first = rand([true, false])
+
+                    # place orders
+                    if bid_first == true
                         # post quote on bid side
-                        print_msg == true && place_order[1] == true ? println("(PMM $(id)) BUY: price = $(P_bid), size = $(unit_trade_size), ticker = $(ticker).") : nothing
-                        place_order[1] == true ? order = Client.provideLiquidity(ticker,"BUY_ORDER",P_bid,unit_trade_size,id) : nothing
+                        print_msg == true && place_order[id, ticker] == true ? println("(PMM $(id)) BUY: price = $(P_bid), size = $(unit_trade_size), ticker = $(ticker).") : nothing
+                        place_order[id, ticker] == true ? order = Client.provideLiquidity(ticker,"BUY_ORDER",P_bid,unit_trade_size,id) : nothing
+
+                        # post quote on ask side
+                        print_msg == true && place_order[id, ticker] == true ? println("(PMM $(id)) SELL: price = $(P_ask), size = $(unit_trade_size), ticker = $(ticker).") : nothing
+                        place_order[id, ticker] == true ? order = Client.provideLiquidity(ticker,"SELL_ORDER",P_ask,unit_trade_size,id) : nothing
+                    else
+                        # post quote on ask side
+                        print_msg == true && place_order[id, ticker] == true ? println("(PMM $(id)) SELL: price = $(P_ask), size = $(unit_trade_size), ticker = $(ticker).") : nothing
+                        place_order[id, ticker] == true ? order = Client.provideLiquidity(ticker,"SELL_ORDER",P_ask,unit_trade_size,id) : nothing
+
+                        # post quote on bid side
+                        print_msg == true && place_order[id, ticker] == true ? println("(PMM $(id)) BUY: price = $(P_bid), size = $(unit_trade_size), ticker = $(ticker).") : nothing
+                        place_order[id, ticker] == true ? order = Client.provideLiquidity(ticker,"BUY_ORDER",P_bid,unit_trade_size,id) : nothing
+                    end
         
+                    @async begin
                         #----- Hedging Policy -----#
                         # Determine the fraction of current inventory to hedge (by initiating offsetting trade)
         
@@ -147,8 +162,8 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
                         #----- Update Step -----#
                         # pause and reset data structures
                         sleep(1)
-                        ν_new_bid = place_order[1] == true ? [unit_trade_size] : [0.0]
-                        ν_new_ask = place_order[1] == true ? [unit_trade_size] : [0.0]
+                        ν_new_bid = place_order[id, ticker] == true ? [unit_trade_size] : [0.0]
+                        ν_new_ask = place_order[id, ticker] == true ? [unit_trade_size] : [0.0]
 
                         # retrieve data for (potentially) unfilled sell order
                         active_sell_orders = Client.getActiveSellOrders(id, ticker)
@@ -179,8 +194,8 @@ function PMM_run(num_agents, num_assets, parameters, server_info; collect_data =
                         end
         
                         # adjust cash and inventory
-                        cash[id], z[id, ticker] = update_init_cash_inventory(cash[id], z[id, ticker], P_t, S_ref_0, ν_new_bid,
-                                                        new_bid[3], ν_new_ask, new_ask[3])
+                        cash[id], z[id, ticker] = update_init_cash_inventory(cash[id], z[id, ticker], new_bid[ticker, 1], new_bid[ticker, 2], ν_new_bid,
+                                                        new_bid[ticker, 3], ν_new_ask, new_ask[ticker, 3])
                     end
                 end
             end
