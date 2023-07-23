@@ -35,7 +35,7 @@ function PLT_run(num_traders, num_assets, parameters, server_info; print_msg=fal
     market_open, market_close = Client.getMarketSchedule()
  
     # initialize traders
-    init_traders(num_traders, "Liquidity Taker", init_cash_range, init_shares_range, num_assets)
+    init_several_traders(num_traders, "Liquidity Taker", init_cash_range, init_shares_range)
 
     # preallocate trading data structures 
     assets = zeros(Int64, num_assets)

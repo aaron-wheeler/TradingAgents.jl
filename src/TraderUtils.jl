@@ -11,6 +11,18 @@ function init_traders(num_traders, trader_label, init_cash_range, init_shares_ra
     end
 end
 
+function init_several_traders(num_traders, trader_label, init_cash_range, init_shares_range)
+    
+    # parse parameters -
+    min_cash = first(init_cash_range)
+    max_cash = last(init_cash_range)
+    min_holdings = first(init_shares_range)
+    max_holdings = last(init_shares_range)
+    
+    # send request to server -
+    Client.createSeveralPortfolios(num_traders, trader_label, min_cash, max_cash, min_holdings, max_holdings)
+end
+
 function get_trade_details!(id, assets, stock_prices)
     holdings = Client.getHoldings(id)
     # get shares in ticker-based sequence
