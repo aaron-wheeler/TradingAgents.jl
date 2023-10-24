@@ -1,20 +1,7 @@
-"""
-    RandomMM_run(...)
+#=
+    Deprecated in favor of ParallelMarketMaker.jl
+=#
 
-Simulate random market-making agent activity.
-
-# Arguments
-- ...
-
-# Keywords
-- 
-
-# Returns
-- 
-
-# References
-- 
-"""
 function RandomMM_run(ticker, parameters, init_conditions, server_info; collect_data = false)
     # unpack parameters
     id,ϵ_min,ϵ_max,inventory_limit,unit_trade_size,trade_freq = parameters
@@ -33,12 +20,6 @@ function RandomMM_run(ticker, parameters, init_conditions, server_info; collect_
     # preallocate data structures and variables
     cash_data = Float64[]
     inventory_data = Float64[]
-    # bid_quote_data = Float64[]
-    # ask_quote_data = Float64[]
-    # S_bid_data = Float64[]
-    # S_ask_data = Float64[]
-    # mid_price_data = Float64[]
-    # time_trade_data = DateTime[]
     new_bid = [0.0 0.0 0.0]
     new_ask = [0.0 0.0 0.0]
 

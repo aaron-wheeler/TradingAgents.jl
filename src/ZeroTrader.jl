@@ -1,23 +1,7 @@
-"""
-    ZT_run(num_traders::Int, num_assets::Int, parameters::Tuple{...},
-            server_info::Tuple{...}; print_msg:Bool=false)
+#=
+    Deprecated in favor of ParallelLiquidityTaker.jl
+=#
 
-Simulate zero-intelligence trading agent activity.
-
-# Arguments
-- `num_traders::Int`: the number of traders to simulate
-- `num_assets::Int`: the number of available assets for the agents to trade
-- ...
-
-# Keywords
-- 
-
-# Returns
-- 
-
-# References
-- 
-"""
 function ZT_run(num_traders, num_assets, parameters, server_info; print_msg=false)
     # unpack parameters
     username, password, init_cash_range, init_shares_range, prob_wait, trade_freq, num_MM = parameters

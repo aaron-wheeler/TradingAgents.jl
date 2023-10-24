@@ -1,19 +1,30 @@
 """
-    PMM_run(...)
+    PMM_run(num_agents::Int, num_assets::Int,
+            parameters::Tuple{Float64, Float64, Int, Int},
+            server_info::Tuple{String, String, String, String};
+            collect_data::Bool=false, print_msg::Bool=false)
 
 Simulate random market-making agent activity in "parallel" (asynchronous tasks).
 
 # Arguments
-- ...
+- `num_agents::Int`: the number of market-making agents to simulate
+- `num_assets::Int`: the number of available assets for the agents to trade
+- `parameters::Tuple{Float64, Float64, Int, Int}`: a tuple of parameters for the simulation.
+    The tuple is composed of the following elements:
+    - `ϵ_min::Float64`: the lower bound for the price deviation variable
+    - `ϵ_max::Float64`: the upper bound for the price deviation variable
+    - `unit_trade_size::Int`: the amount of shares behind each quote
+    - `trade_freq::Int`: the average number of seconds between trades
+- `server_info::Tuple{String, String, String, String}`: a tuple of server information for
+    connecting to the brokerage. The tuple is composed of the following elements:
+    - `host_ip_address::String`: the IP address of the brokerage server
+    - `port::String`: the port number of the brokerage server
+    - `username::String`: the agent username for the brokerage server
+    - `password::String`: the agent password for the brokerage server
 
 # Keywords
-- 
-
-# Returns
-- 
-
-# References
-- 
+- `collect_data::Bool=false`: whether or not to collect data from the simulation
+- `print_msg::Bool=false`: whether or not to print messages during the simulation
 """
 function PMM_run(num_agents, num_assets, parameters, server_info; collect_data = false, print_msg=false)
 

@@ -1,3 +1,7 @@
+"""
+Example script for running the Adaptive Market Maker algorithm.
+"""
+
 using TradingAgents, Dates
 
 ## Example use case

@@ -71,23 +71,44 @@ end
 # ======================================================================================== #
 
 """
-    AdaptiveMM_run(...)
+    AdaptiveMM_run(ticker::Int, parameters::Tuple{Float64, Int, Float64, Int, Int, Int},
+                    init_conditions::Tuple{Float64, Int, Int, Int},
+                    server_info::Tuple{String, String, String, String};
+                    collect_data = false)
 
 Simulate adaptive market-making agent activity.
 
 # Arguments
-- ...
+- `ticker::Int`: the ticker ID of the asset being traded by the Adaptive Market Maker
+- `parameters::Tuple{Float64, Int, Float64, Int, Int, Int}`: a tuple of parameters for
+    specifying the Adaptive Market Maker's behavior. The tuple must be of the form
+    `(η_ms, γ, δ_tol, inventory_limit, unit_trade_size, trade_freq)`, where
+    - `η_ms::Float64`: the market share target
+    - `γ::Int`: the risk aversion parameter
+    - `δ_tol::Float64`: the optimization tolerance
+    - `inventory_limit::Int`: the maximum and minimum number of share holdings allowed
+    - `unit_trade_size::Int`: the amount of shares behind each quote
+    - `trade_freq::Int`: the number of seconds between each trading invocation
+- `init_conditions::Tuple{Float64, Int, Int, Int}`: a tuple of initial conditions for
+    the Adaptive Market Maker. The tuple must be of the form `(init_cash, init_z,
+    num_init_quotes, num_init_rounds)`, where
+    - `init_cash::Float64`: the initial cash balance
+    - `init_z::Int`: the initial inventory
+    - `num_init_quotes::Int`: the number of random quotes to send out per initialization
+        round
+    - `num_init_rounds::Int`: the number of initialization rounds
+- `server_info::Tuple{String, String, String, String}`: a tuple of server information for
+    connecting to the brokerage/Exchange. The tuple is composed of the following elements:
+    - `host_ip_address::String`: the IP address of the brokerage server
+    - `port::String`: the port number of the brokerage server
+    - `username::String`: the username to be used for the brokerage account
+    - `password::String`: the password to be used for the brokerage account
 
 # Keywords
-- 
-
-# Returns
-- 
-
-# References
-- 
+- `collect_data::Bool=false`: whether or not to collect data during the simulation
 """
 function AdaptiveMM_run(ticker, parameters, init_conditions, server_info; collect_data = false)
+
     # unpack parameters
     η_ms,γ,δ_tol,inventory_limit,unit_trade_size,trade_freq = parameters
     init_cash, init_z, num_init_quotes, num_init_rounds = init_conditions
@@ -108,12 +129,6 @@ function AdaptiveMM_run(ticker, parameters, init_conditions, server_info; collec
     s_ϵ_losses = Float64[]
     cash_data = Float64[]
     inventory_data = Float64[]
-    # bid_quote_data = Float64[]
-    # ask_quote_data = Float64[]
-    # S_bid_data = Float64[]
-    # S_ask_data = Float64[]
-    # mid_price_data = Float64[]
-    # time_trade_data = DateTime[]
     new_bid = [1.0 0.0 0.0 0.0 0.0 0.0]
     new_ask = [1.0 0.0 0.0 0.0 0.0 0.0]
 
@@ -149,6 +164,7 @@ function AdaptiveMM_run(ticker, parameters, init_conditions, server_info; collec
     @info "(Adaptive MM) Initiating trade sequence now."
     while Dates.now() < market_close
         if initiated != true
+
             #----- Initialization Step -----#
             early_stoppage = false
 

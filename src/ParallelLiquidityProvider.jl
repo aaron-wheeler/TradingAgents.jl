@@ -1,23 +1,38 @@
 """
-    PLP_run(num_traders::Int, num_assets::Int, parameters::Tuple{...},
-            server_info::Tuple{...}; tick_size::Float64=0.01,
-            lvl::Float64=1.03, print_msg:Bool=false)
+    PLP_run(num_traders::Int, num_assets::Int,
+            parameters::Tuple{StepRangeLen{Float64}, StepRangeLen{Int}, Int, Int},
+            server_info::Tuple{String, String, String, String};
+            print_msg:Bool=false)
 
-Simulate zero-intelligence liquidity providers in parallel.
+Simulate zero-intelligence liquidity providers in parallel. To operate these agents in
+parallel, the `Distributed` package is used. This function must be called after
+`addprocs(n)` has been called, where `n` is the number of workers to be used.
 
 # Arguments
 - `num_traders::Int`: the number of liquidity providers to simulate
 - `num_assets::Int`: the number of available assets for the agents to trade
-
+- `parameters::Tuple{StepRangeLen{Float64}, StepRangeLen{Int}, Int, Int}`: a tuple
+    of parameters for the simulation. The tuple is composed of the following elements:
+    - `init_cash_range::StepRangeLen{Float64}`: the range of initial cash values for the
+        liquidity providers. E.g., `init_cash_range = 10000.0:0.01:30000.0` defines a
+        possible cash balance anywhere between $10,000.00 and $30,000.00.
+    - `init_shares_range::StepRangeLen{Int}`: the range of initial share holdings for the
+        liquidity providers. E.g., `init_shares_range = 0:1:120` defines a possible share
+        holding (of each available asset) anywhere between 0 shares and 120 shares.
+    - `trade_freq::Int`: the average number of seconds between trades for each liquidity
+        provider. E.g., `trade_freq = 720` means that each liquidity provider will trade
+        approximately once every 720 seconds (12 minutes).
+    - `num_ids::Int`: the number of reserved ids set aside for all other agents in the
+        simulation (e.g., liquidity takers and market makers)
+- `server_info::Tuple{String, String, String, String}`: a tuple of server information for
+    connecting to the brokerage. The tuple is composed of the following elements:
+    - `host_ip_address::String`: the IP address of the brokerage server
+    - `port::String`: the port number of the brokerage server
+    - `username::String`: the username to be used for the brokerage account
+    - `password::String`: the password to be used for the brokerage account
 
 # Keywords
-- 
-
-# Returns
-- 
-
-# References
-- 
+- `print_msg::Bool=false`: whether or not to print messages to the console
 """
 function PLP_run(num_traders, num_assets, parameters, server_info; print_msg=false)
 

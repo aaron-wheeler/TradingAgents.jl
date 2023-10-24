@@ -1,24 +1,7 @@
-"""
-    FT_run(num_traders::Int, num_assets::Int, parameters::Tuple{...},
-            server_info::Tuple{...}; tick_size::Float64=0.01,
-            lvl::Float64=1.03, print_msg:Bool=false)
+#=
+    Deprecated in favor of ParallelLiquidityProvider.jl
+=#
 
-Simulate fundamental trading agent activity.
-
-# Arguments
-- `num_traders::Int`: the number of fundamental traders to simulate
-- `num_assets::Int`: the number of available assets for the agents to trade
-
-
-# Keywords
-- 
-
-# Returns
-- 
-
-# References
-- 
-"""
 function FT_run(num_traders, num_assets, parameters, server_info; tick_size=0.01, lvl=1.03, print_msg=false)
 
     # unpack parameters
