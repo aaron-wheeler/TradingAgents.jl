@@ -49,8 +49,7 @@ jobs:
         run: |
           julia --project=docs -e '
             using Pkg
-            Pkg.add(url = "https://github.com/aaron-wheeler/VLLimitOrderBook.jl.git")
-            Pkg.add(url = "https://github.com/aaron-wheeler/Brokerage.jl.git")
+            Pkg.add([PackageSpec(url = "https://github.com/aaron-wheeler/VLLimitOrderBook.jl.git"), PackageSpec(url = "https://github.com/aaron-wheeler/Brokerage.jl.git")])
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()'
       - name: Build and deploy
