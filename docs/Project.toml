@@ -1,3 +1,5 @@
 [deps]
+Brokerage = "c5a525f6-2ca2-4903-bddc-b4106679d02b"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 TradingAgents = "a932613d-76ea-43ff-97dc-a74afa0c30e6"
+VLLimitOrderBook = "aaf583bd-e1f6-46ea-b02f-a6ceb51252d5"

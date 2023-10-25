@@ -17,7 +17,7 @@ parallel, the `Distributed` package is used. This function must be called after
     - `password::String`: the password to be used for the brokerage account
     - `init_cash_range::StepRangeLen{Float64}`: the range of initial cash values for the
         liquidity takers. E.g., `init_cash_range = 10000.0:0.01:30000.0` defines a
-        possible cash balance anywhere between $10,000.00 and $30,000.00.
+        possible cash balance anywhere between \\\$10,000.00 and \\\$30,000.00.
     - `init_shares_range::StepRangeLen{Int}`: the range of initial share holdings for the
         liquidity takers. E.g., `init_shares_range = 0:1:120` defines a possible share
         holding (of each available asset) anywhere between 0 shares and 120 shares.
